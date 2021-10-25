@@ -7,7 +7,7 @@ const ShortUniqueId = require("short-unique-id");
 
 //get request for now, will be changed to post request when data comes from req object
 router.post("/create-team", (req, res, next) => {
-  const { leader, email, teamName } = req.body;
+  const { username, email, teamName } = req.body;
   const uid = new ShortUniqueId({ length: 10 });
 
   try {
@@ -16,7 +16,7 @@ router.post("/create-team", (req, res, next) => {
       teamName: teamName,
       teamID: uid(),
       pocEmail: email,
-      teamMembers: [leader],
+      teamMembers: [username],
     });
 
     team.save();
@@ -30,6 +30,13 @@ router.post("/create-team", (req, res, next) => {
 router.post("/join-team", async (req, res, next) => {
   const { username, teamID } = req.body;
   try {
+
+    const checkDuplicate = await Teams.find({ "teamMembers": username });
+    if (checkDuplicate.length !== 0) {
+      res.status(500).send('the user has already joined a team');
+      return;
+    }
+
     const updatedTeam = await Teams.findOneAndUpdate(
       teamID,
       { $push: { teamMembers: username } },
@@ -57,9 +64,14 @@ router.post("/leave-team", async (req, res, next) => {
 });
 
 router.post("/delete-team", async (req, res, next) => {
-  const { teamID } = req.body;
+  const { username, teamID } = req.body;
 
   try {
+    const team = await Teams.findOne({ "teamID": teamID });
+    if (username!==team.teamMembers[0]) {
+      res.status(500).send('only the team leader can delete a team');
+      return;
+    }
     await Teams.deleteOne({ "teamID": teamID });
     res.status(200).send('team deleted');
   } catch (error) {
