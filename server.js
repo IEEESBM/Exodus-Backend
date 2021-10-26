@@ -3,7 +3,7 @@ const express = require("express");
 
 const cors = require("cors");
 const InitiateMongoServer = require("./config/db");
-const team = require("./routes/team.js");
+const whole = require("./routes/whole.js");
 
 InitiateMongoServer();
 
@@ -33,7 +33,7 @@ app.get("/", (req, res) => {
   res.json("helllo");
 });
 
-app.use("/api", team);
+app.use("/api", whole);
 
 app.listen(PORT, (req, res) => {
   console.log(`Server Started at PORT ${PORT}`);
