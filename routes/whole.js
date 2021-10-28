@@ -69,6 +69,8 @@ router.put("/send-request/", async (req, res) => {
       const currentUser = await User.findOne({ _id: currentUserId });
       const requestedUser = await User.findOne({ _id: requestedUserId });
 
+      //following code checks so that user cannot send multiple requests to the same person
+
       if (
         currentUser.requestSentPending.indexOf(requestedUserId) != -1 ||
         requestedUser.requestReceivedPending.indexOf(currentUserId) != -1
@@ -101,8 +103,6 @@ router.put("/send-request/", async (req, res) => {
 
 router.put("/accept-request/", async (req, res) => {
   const { currentUserId, requestedUserId } = req.body;
-
-  console.log(requestedUserId);
 
   try {
     const updatedRequestedUser = await User.findOneAndUpdate(
