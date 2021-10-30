@@ -5,7 +5,6 @@ router = express.Router();
 const ShortUniqueId = require("short-unique-id");
 const Teams = require("../models/TeamModel");
 const User = require("../models/UserModel");
-const Submission = require("../models/SubmissionModel");
 
 // *******************************************************
 
@@ -177,6 +176,13 @@ router.put("/send-request", async (req, res) => {
         return res
           .status(401)
           .json("You cannot send multiple connection requests!");
+      } else if (
+        currentUser.friends.indexOf(requestedUserId) != -1 ||
+        requestedUser.friends.indexOf(currentUserId) != -1
+      ) {
+        return res
+          .status(401)
+          .json("The user requested is already a connection!");
       }
 
       const updatedCurrentUser = await User.findOneAndUpdate(
@@ -228,86 +234,6 @@ router.put("/accept-request", async (req, res) => {
         {
           $push: { friends: requestedUserId },
           $pull: { requestSentPending: requestedUserId },
-        },
-        { new: true }
-      );
-
-      res.status(200).json({ updatedCurrentUser, updatedRequestedUser });
-    } catch (error) {
-      return res.status(500).json("Users not found");
-    }
-  } catch (err) {
-    console.log(err);
-    res.status(500).json(err);
-  }
-});
-
-router.put("/delete-request", async (req, res, next) => {
-  const { currentUserId, requestedUserId } = req.body;
-
-  try {
-    try {
-      const currentUser = await User.findOne({ _id: currentUserId });
-      const requestedUser = await User.findOne({ _id: requestedUserId });
-      if (
-        currentUser.requestSentPending.indexOf(requestedUserId) == -1 ||
-        requestedUser.requestReceivedPending.indexOf(currentUserId) == -1
-      ) {
-        return res.status(401).json("Error in deleting request!");
-      }
-
-      const updatedRequestedUser = await User.findOneAndUpdate(
-        { _id: requestedUserId },
-        {
-          $pull: { requestReceivedPending: currentUserId }
-        },
-        { new: true }
-      );
-
-      const updatedCurrentUser = await User.findOneAndUpdate(
-        { _id: currentUserId },
-        {
-          $pull: { requestSentPending: requestedUserId }
-        },
-        { new: true }
-      );
-
-      res.status(200).json({ updatedCurrentUser, updatedRequestedUser });
-    } catch (error) {
-      return res.status(500).json("Users not found");
-    }
-  } catch (err) {
-    console.log(err);
-    res.status(500).json(err);
-  }
-});
-
-router.put("/decline-request", async (req, res, next) => {
-  const { currentUserId, requestedUserId } = req.body;
-
-  try {
-    try {
-      const currentUser = await User.findOne({ _id: currentUserId });
-      const requestedUser = await User.findOne({ _id: requestedUserId });
-      if (
-        currentUser.requestSentPending.indexOf(requestedUserId) == -1 ||
-        requestedUser.requestReceivedPending.indexOf(currentUserId) == -1
-      ) {
-        return res.status(401).json("Error in declining request!");
-      }
-
-      const updatedRequestedUser = await User.findOneAndUpdate(
-        { _id: requestedUserId },
-        {
-          $pull: { requestReceivedPending: currentUserId }
-        },
-        { new: true }
-      );
-
-      const updatedCurrentUser = await User.findOneAndUpdate(
-        { _id: currentUserId },
-        {
-          $pull: { requestSentPending: requestedUserId }
         },
         { new: true }
       );
