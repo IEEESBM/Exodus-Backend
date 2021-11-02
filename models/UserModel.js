@@ -20,11 +20,25 @@ const userSchema1 = new Schema({
     default: false,
   },
 
-  requestSentPending: [String],
+  // requestSentPending: [String],
 
-  requestReceivedPending: [String],
+  // requestReceivedPending: [String],
 
-  friends: [String],
+  // friends: [String],
+
 });
+
+userSchema1.add({requestSentPending:[{
+  type:Schema.Types.ObjectId,
+  ref : 'User'
+}]});
+userSchema1.add({requestReceivedPending:[{
+  type:Schema.Types.ObjectId,
+  ref : 'User'
+}]});
+userSchema1.add({friends:[{
+  type:Schema.Types.ObjectId,
+  ref : 'User'
+}]});
 
 module.exports = mongoose.model("User", userSchema1);

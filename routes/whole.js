@@ -8,112 +8,6 @@ const User = require("../models/UserModel");
 
 // *******************************************************
 
-router.post("/create-team", async (req, res, next) => {
-
-  const { username, pocEmail, teamName } = req.body;
-  const uid = new ShortUniqueId({ length: 10 });
-
-  try {
-    const team = await Teams.create({
-
-      teamName: teamName,
-      teamID: uid(),
-      pocEmail: pocEmail,
-      teamMembers: [username],
-    });
-    return res.status(200).json({ team });
-  }
-  catch (err) {
-    let errorMessage = { pocEmail: '', teamName: '' };
-    if (err.code === 11000) {
-      if (err.keyValue.teamName) {
-        errorMessage.teamName = 'That team name is not available';
-      }
-      if (err.keyValue.pocEmail) {
-        errorMessage.pocEmail = 'That email is already registered';
-      }
-    }
-    if (err.message.includes('Team validation failed')) {
-      Object.values(err.errors).forEach((err) => {
-        errorMessage[err.properties.path] = err.properties.message;
-      });
-    }
-    return res.status(500).json({ errorMessage });
-  }
-
-});
-
-router.post("/join-team", async (req, res, next) => {
-
-  const { username, teamID } = req.body;
-
-  try {
-    const checkDuplicate = await Teams.find({ "teamMembers": username });
-    if (checkDuplicate.length !== 0) {
-      return res.status(500).json({ error: 'the user has already joined a team' });
-    }
-
-    const team = await Teams.find({ "teamID": teamID });
-    if (team.length === 0) {
-      return res.status(500).json({ error: 'please enter correct team ID' })
-    }
-
-    const updatedTeam = await Teams.findOneAndUpdate(
-      teamID,
-      { $push: { teamMembers: username } },
-      { new: true }
-    );
-    res.status(200).send(updatedTeam);
-  } catch (error) {
-    res.status(500).send(error);
-  }
-});
-
-router.post("/leave-team", async (req, res, next) => {
-  const { username, teamID } = req.body;
-
-  try {
-    const team = await Teams.find({ "teamID": teamID });
-    console.log(team);
-    if (team.length === 0) {
-      return res.status(500).json({ error: 'please enter correct team ID' })
-    }
-    if (username === team[0].teamMembers[0]) {
-      res.status(500).json({ error: 'the team leader cannot leave the team' });
-      return;
-    }
-
-    const updatedTeam = await Teams.findOneAndUpdate(
-      teamID,
-      { $pull: { teamMembers: username } },
-      { new: true }
-    );
-    res.status(200).send(updatedTeam);
-  } catch (error) {
-    console.log(error);
-    res.status(500).json({ error: 'error' })
-  }
-});
-
-router.post("/delete-team", async (req, res, next) => {
-  const { username, teamID } = req.body;
-
-  try {
-    const team = await Teams.find({ "teamID": teamID });
-    if (team.length === 0) {
-      return res.status(500).json({ error: 'please enter correct team ID' })
-    }
-    if (username !== team[0].teamMembers[0]) {
-      res.status(500).json({ error: 'only the team leader can delete a team' });
-      return;
-    }
-    await Teams.deleteOne({ "teamID": teamID });
-    res.status(200).send('team deleted');
-  } catch (error) {
-    console.log(error);
-    res.status(500).json({ error: 'error' });
-  }
-});
 
 
 // ******************************************************
@@ -142,11 +36,14 @@ router.post("/user-create", async (req, res, next) => {
   }
 });
 
-router.post("/toggle-public", async (req, res, next) => {
-  const { username } = req.body;
+
+
+router.post("/toggle-public/:id", async (req, res, next) => {
+  // const { username } = req.body;
 
   try {
-    const user = await User.findOne({ username: username });
+    // const user = await User.findOne({ username: username });
+    const user = await User.findOne({_id:req.params.id});
     if (user.public === false) {
       await user.updateOne({ public: true });
     }
@@ -160,6 +57,7 @@ router.post("/toggle-public", async (req, res, next) => {
 });
 
 router.put("/send-request", async (req, res) => {
+  console.log(req.body);
   const { currentUserId, requestedUserId } = req.body;
 
   try {
@@ -168,37 +66,59 @@ router.put("/send-request", async (req, res) => {
       const requestedUser = await User.findOne({ _id: requestedUserId });
 
       //following code checks so that user cannot send multiple requests to the same person
-
-      if (
-        currentUser.requestSentPending.indexOf(requestedUserId) != -1 ||
-        requestedUser.requestReceivedPending.indexOf(currentUserId) != -1
-      ) {
+  
+      // if (
+      //   (currentUser.requestSentPending!=undefined && requestedUser.requestReceivedPending!=undefined) &&
+      //   (currentUser.requestSentPending.length>0 && requestedUser.requestReceivedPending.length>0)
+      //    &&
+      //   currentUser.requestSentPending.indexOf(requestedUserId) != -1 ||
+      //   requestedUser.requestReceivedPending.indexOf(currentUserId) != -1
+      // ) {
+      //   return res
+      //     .status(401)
+      //     .json("You cannot send multiple connection requests!");
+      // } else if (
+      //   (currentUser.friends!=undefined && requestedUser.friends!=undefined)&&
+      //   (currentUser.friends.length>0 && requestedUser.friends.length>0) &&
+      //   currentUser.friends.indexOf(requestedUserId) != -1 ||
+      //   requestedUser.friends.indexOf(currentUserId) != -1
+      // ) {
+      //   return res
+      //     .status(401)
+      //     .json("The user requested is already a connection!");
+      // }
+      // console.log(requestedUser);
+      const requestexists = await User.exists({_id:currentUserId,requestSentPending:requestedUserId});
+      const reqrecexists = await User.exists({_id:requestedUserId,requestReceivedPending:currentUserId});
+      const friendexists1 = await User.exists({_id:currentUserId,friends:requestedUserId});
+      const friendexists2 = await User.exists({_id:requestedUserId,friends:currentUserId});
+      console.log(requestexists+" "+reqrecexists+" "+friendexists1+" "+friendexists2);
+      if(requestexists || reqrecexists){
         return res
           .status(401)
           .json("You cannot send multiple connection requests!");
-      } else if (
-        currentUser.friends.indexOf(requestedUserId) != -1 ||
-        requestedUser.friends.indexOf(currentUserId) != -1
-      ) {
-        return res
-          .status(401)
-          .json("The user requested is already a connection!");
       }
+      else if(friendexists1 || friendexists2){
+        return res
+            .status(401)
+            .json("The user requested is already a connection!");
+      }
+
 
       const updatedCurrentUser = await User.findOneAndUpdate(
         { _id: currentUserId },
         { $push: { requestSentPending: requestedUserId } },
         { new: true }
-      );
+      ).populate('username','_id');
       const updatedRequestedUser = await User.findOneAndUpdate(
         { _id: requestedUserId },
         { $push: { requestReceivedPending: currentUserId } },
         { new: true }
-      );
+      ).populate('username','_id');
 
       res.status(200).json({ updatedCurrentUser, updatedRequestedUser });
     } catch (error) {
-      return res.status(500).json("Users not found");
+      return res.status(500).json({'err':error.toString()});
     }
   } catch (err) {
     console.log(err);
@@ -213,10 +133,16 @@ router.put("/accept-request", async (req, res) => {
     try {
       const currentUser = await User.findOne({ _id: currentUserId });
       const requestedUser = await User.findOne({ _id: requestedUserId });
-      if (
-        currentUser.requestSentPending.indexOf(requestedUserId) == -1 ||
-        requestedUser.requestReceivedPending.indexOf(currentUserId) == -1
-      ) {
+      // if (
+      //   currentUser.requestSentPending.indexOf(requestedUserId) == -1 ||
+      //   requestedUser.requestReceivedPending.indexOf(currentUserId) == -1
+      // ) {
+      //   return res.status(401).json("Error in accepting request!");
+      // }
+      const test1 = await User.exists({_id:currentUserId,requestSentPending:requestedUserId});
+      const test2 = await User.exists({_id:requestedUserId,requestReceivedPending:currentUserId});
+      console.log(test1+" "+test2);
+      if(!test1 || !test2){
         return res.status(401).json("Error in accepting request!");
       }
 
@@ -240,7 +166,7 @@ router.put("/accept-request", async (req, res) => {
 
       res.status(200).json({ updatedCurrentUser, updatedRequestedUser });
     } catch (error) {
-      return res.status(500).json("Users not found");
+      return res.status(500).json({'err':error.toString()});
     }
   } catch (err) {
     console.log(err);
@@ -250,25 +176,6 @@ router.put("/accept-request", async (req, res) => {
 
 // *******************************************************
 
-router.get("/get-team", async (req, res, next) => {
-
-  const { username } = req.body;
-
-  const team = await Teams.find({ "teamMembers": username });
-
-  if (team.length === 0) {
-    return res.status(404).json("team not found");
-  }
-
-  // res.status(200).json(team);
-  if (team[0].teamMembers[0] === username) {
-    res.status(200).json({ teamLeader: true, team });
-  }
-  else {
-    res.status(200).json({ teamLeader: false, team });
-  }
-
-});
 
 // *******************************************************
 
@@ -300,5 +207,64 @@ router.post("/submit", async (req, res, next) => {
 
 })
 
+
+// Listing public users
+
+router.get("/public-users", async (req, res, next) => {
+  let publicBool = true;
+  try {
+    let publicUsers;
+    publicUsers = await User.find({
+      public: {
+        $in: [publicBool],
+      },
+    });
+    res.status(200).json(publicUsers);
+  } catch (err) {
+    res.status(500).json(err);
+  }
+});
+
+//recieved requests
+router.get("/requests/:id",async(req,res)=>{
+  try{
+    const user = await User.findOne({_id:req.params.id}).populate('requestReceivedPending');
+    if(!user){
+      return res.status(404).json({'err':'User not found'});
+    }
+    //console.log(user);
+    res.json(user.requestReceivedPending);
+  }
+  catch(err){
+    res.status(500).json({'err':err.toString()});
+  }
+})
+
+//sent requests
+router.get("/sent-requests/:id",async(req,res)=>{
+  try{
+    const user = await User.findOne({_id:req.params.id}).populate('requestSentPending');
+    if(!user){
+      return res.status(404).json({'err':'User not found'});
+    }
+    res.json(user.requestSentPending);
+  }
+  catch(err){
+    res.status(500).json({'err':err.toString()});
+  }
+})
+
+router.get("/friends/:id",async(req,res)=>{
+  try{
+    const user = await User.findOne({_id:req.params.id}).populate('friends');
+    if(!user){
+      return res.status(404).json({'err':'User not found'});
+    }
+    res.json(user.friends);
+  }
+  catch(err){
+    res.status(500).json({'err':err.toString()});
+  }
+})
 
 module.exports = router;

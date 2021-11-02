@@ -13,10 +13,13 @@ const teamSchema = new Schema({
     type: String,
     unique: true,
     required: [true, 'Please enter a Team Name'],
-    minlength: [4, 'Minimum Team Name length must be 4 characters']
+    minlength: [2, 'Minimum Team Name length must be 2 characters']
   },
 
-  teamMembers: [String],
+  teamMembers: [{
+    type:Schema.Types.ObjectId,
+    ref:'User'
+  }],
 
   pocEmail: {
     type: String,
