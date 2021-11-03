@@ -9,14 +9,15 @@ const User = require("../models/UserModel");
 router.get("/:userId", async (req, res, next) => {
     
     const userId = req.params.userId;
+    console.log("userId:"+userId);
   
-    const team = await Teams.find({ "teamMembers": userId }).populate('teamMembers');
+    const team = await Teams.find({ "teamMembers": userId });
   
     if (team.length === 0) {
       return res.status(404).json("team not found");
     }
   
-   console.log(team[0].teamMembers[0]);
+   console.log(team);
     if (team[0].teamMembers[0]._id == userId) {
       res.status(200).json({ teamLeader: true, team });
     }

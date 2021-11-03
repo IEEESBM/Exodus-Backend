@@ -182,20 +182,20 @@ router.put("/accept-request", async (req, res) => {
 router.post("/submit", async (req, res, next) => {
 
   try {
-    const { username, link } = req.body;
+    const { userId, link } = req.body;
     if (link === '') {
       return res.status(500).json("enter website link")
     }
-    const team = await Teams.find({ "teamMembers": username });
+    const team = await Teams.find({ "teamMembers": userId });
     if (team.length === 0) {
       return res.status(404).json("team not found");
     }
-    if (team[0].teamMembers[0] !== username) {
+    if (team[0].teamMembers[0]._id !== userId) {
       return res.status(500).json("only team leader can submit");
     }
 
     const updatedTeam = await Teams.findOneAndUpdate(
-      username,
+      userId,
       { "websiteLink": link },
       { new: true }
     );

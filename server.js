@@ -5,6 +5,7 @@ const cors = require("cors");
 const InitiateMongoServer = require("./config/db");
 const whole = require("./routes/whole.js");
 const team = require("./routes/team.js");
+const user = require('./routes/authRoute');
 
 InitiateMongoServer();
 
@@ -36,6 +37,7 @@ app.get("/", (req, res) => {
 
 app.use("/api", whole);
 app.use("/api/team",team);
+app.use("/api/auth",user);
 
 app.listen(PORT, (req, res) => {
   console.log(`Server Started at PORT ${PORT}`);
