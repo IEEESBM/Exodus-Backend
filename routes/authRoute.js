@@ -6,6 +6,7 @@ const nodemailer = require("nodemailer");
 const bcrypt = require('bcrypt');
 const { checkIsVerified, checkJWT } = require('../middleware/authMiddleware');
 const {verifyToken} = require('../middleware/usercheck');
+const constructTemplate = require('../utils/emailTemplate');
 
 const router = Router();
 
@@ -88,7 +89,9 @@ router.post('/signup', async (req, res) => {
       phoneno,
       isVerified: false
     });
-    console.log(user);
+    if(!user){
+      return res.status(400).json({'msg':'Counld not create user'});
+    }
     const token = createToken(user._id);
     sessionstorage.setItem('jwt', token);
 
@@ -99,13 +102,14 @@ router.post('/signup', async (req, res) => {
         pass: process.env.NODE_MAIL_PASS
       }
     });
-
+    const message = constructTemplate(name,"http://localhost:3000/verification/"+token,email);
     const options = {
       from: process.env.NODE_MAIL_USER,
       to: email,
-      subject: 'email verification',
-      text: `go to this link: `,
-      html: `<a href='http://${req.headers.host}/api/auth/verify-email?uid=${user._id}'>click to verify</a>`
+      subject: 'Email verification',
+      text: `Go to this link: `,
+      // html: `<a href='http://${req.headers.host}/api/auth/verify-email?uid=${user._id}'>click to verify</a>`
+      html : message
     }
 
     transporter.sendMail(options, function (err, info) {
@@ -129,10 +133,11 @@ router.post('/signup', async (req, res) => {
 
 /* *********************************************************** */
 
-router.get('/verify-email', async (req, res) => {
+router.get('/verify-email',verifyToken, async (req, res) => {
   try {
-    
-    const user = await User.findOne({ _id: req.query.uid });
+    //req.query.uid
+    console.log(req.userId);
+    const user = await User.findOne({ _id: req.userId });
     if (!user) {
       console.log('could not find user');
     }
