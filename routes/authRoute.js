@@ -96,7 +96,7 @@ router.post('/signup', async (req, res) => {
     sessionstorage.setItem('jwt', token);
 
     var transporter = nodemailer.createTransport({
-      service: "hotmail",
+      service: "gmail",
       auth: {
         user: process.env.NODE_MAIL_USER,
         pass: process.env.NODE_MAIL_PASS
