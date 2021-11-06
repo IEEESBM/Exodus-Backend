@@ -8,7 +8,6 @@ const teamSchema = new Schema({
     type: String,
     unique: true
   },
-
   teamName: {
     type: String,
     unique: true,
@@ -33,6 +32,14 @@ const teamSchema = new Schema({
     type: String,
     required: false,
     default: ""
+  },
+  details:{
+    type:String,
+    default:""
+  },
+  topic:{
+    type:String,
+    default:""
   }
 
 });

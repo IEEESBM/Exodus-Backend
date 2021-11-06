@@ -5,10 +5,12 @@ router = express.Router();
 const ShortUniqueId = require("short-unique-id");
 const Teams = require("../models/TeamModel");
 const User = require("../models/UserModel");
+const { checkIsVerified, checkJWT } = require('../middleware/authMiddleware');
+const {verifyToken} = require('../middleware/usercheck');
 
-router.get("/:userId", async (req, res, next) => {
+router.get("/",checkIsVerified,verifyToken, async (req, res, next) => {
     
-    const userId = req.params.userId;
+    const userId = req.userId;
     console.log("userId:"+userId);
   
     const team = await Teams.find({ "teamMembers": userId });
@@ -28,9 +30,15 @@ router.get("/:userId", async (req, res, next) => {
   
   });
 
-router.post("/create", async (req, res, next) => {
+router.post("/create",checkIsVerified,verifyToken, async (req, res, next) => {
 
-    const { userId, pocEmail, teamName } = req.body;
+    const {teamName } = req.body;
+    const userId = req.userId;
+    const user = await User.findOne({_id:userId});
+    if(!user){
+      return res.status(404).json({'err':'User not found'});
+    }
+    const pocEmail = user.email;
     const uid = new ShortUniqueId({ length: 10 });
   
     try {
@@ -44,28 +52,30 @@ router.post("/create", async (req, res, next) => {
       return res.status(200).json({ team });
     }
     catch (err) {
-      let errorMessage = { pocEmail: '', teamName: '' };
-      if (err.code === 11000) {
-        if (err.keyValue.teamName) {
-          errorMessage.teamName = 'That team name is not available';
-        }
-        if (err.keyValue.pocEmail) {
-          errorMessage.pocEmail = 'That email is already registered';
-        }
-      }
-      if (err.message.includes('Team validation failed')) {
-        Object.values(err.errors).forEach((err) => {
-          errorMessage[err.properties.path] = err.properties.message;
-        });
-      }
-      return res.status(500).json({ errorMessage });
+      // let errorMessage = { pocEmail: '', teamName: '' };
+      // if (err.code === 11000) {
+      //   if (err.keyValue.teamName) {
+      //     errorMessage.teamName = 'That team name is not available';
+      //   }
+      //   if (err.keyValue.pocEmail) {
+      //     errorMessage.pocEmail = 'That email is already registered';
+      //   }
+      // }
+      // if (err.message.includes('Team validation failed')) {
+      //   Object.values(err.errors).forEach((err) => {
+      //     errorMessage[err.properties.path] = err.properties.message;
+      //   });
+      // }
+      // return res.status(500).json({ errorMessage });
+      return res.status(500).json({'err':err.toString()});
     }
   
   });
   
-  router.post("/join", async (req, res, next) => {
+  router.post("/join",checkIsVerified,verifyToken, async (req, res, next) => {
   
-    const { userId, teamID } = req.body;
+    const {teamID } = req.body;
+    const userId = req.userId;
   
     try {
       const checkDuplicate = await Teams.find({ "teamMembers": userId });
@@ -89,8 +99,9 @@ router.post("/create", async (req, res, next) => {
     }
   });
   
-  router.post("/leave", async (req, res, next) => {
-    const { userId, teamID } = req.body;
+  router.post("/leave",checkIsVerified,verifyToken, async (req, res, next) => {
+    const {teamID } = req.body;
+    const userId = req.userId;
   
     try {
       const team = await Teams.find({ "teamID": teamID });
@@ -115,8 +126,9 @@ router.post("/create", async (req, res, next) => {
     }
   });
   
-  router.post("/delete", async (req, res, next) => {
-    const { userId, teamID } = req.body;
+  router.post("/delete",checkIsVerified,verifyToken, async (req, res, next) => {
+    const {teamID } = req.body;
+    const userId = req.userId;
   
     try {
       const team = await Teams.find({ "teamID": teamID });
@@ -135,5 +147,39 @@ router.post("/create", async (req, res, next) => {
       res.status(500).json({ error: 'error' });
     }
   });
+
+  router.post("/submit",checkIsVerified,verifyToken, async (req, res, next) => {
+
+    try {
+      const {websiteLink,details,topic } = req.body;
+      const userId = req.userId;
+      // if (link === '') {
+      //   return res.status(500).json("enter website link")
+      // }
+      const team = await Teams.findOne({ "teamMembers": userId });
+      console.log(team);
+      if(!team){
+        return res.status(404).json({'msg':'Team not found'});
+      }
+      // if (team.length === 0) {
+      //   return res.status(404).json("team not found");
+      // }
+      // if (team[0].teamMembers[0]._id !== userId) {
+      //   return res.status(500).json("only team leader can submit");
+      // }
+  
+      const updatedTeam = await Teams.findOneAndUpdate(
+        {"teamMembers":userId},
+        { websiteLink,details,topic },
+        { new: true }
+      );
+      console.log(updatedTeam);
+      res.status(200).json(updatedTeam);
+  
+    } catch (error) {
+      return res.status(500).json(error);
+    }
+  
+  })
   
 module.exports = router;  

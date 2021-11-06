@@ -5,6 +5,9 @@ router = express.Router();
 const ShortUniqueId = require("short-unique-id");
 const Teams = require("../models/TeamModel");
 const User = require("../models/UserModel");
+const { checkIsVerified, checkJWT } = require('../middleware/authMiddleware');
+const {verifyToken} = require('../middleware/usercheck');
+
 
 // *******************************************************
 
@@ -38,7 +41,7 @@ router.post("/user-create", async (req, res, next) => {
 
 
 
-router.post("/toggle-public/:id", async (req, res, next) => {
+router.post("/toggle-public/:id",checkIsVerified,verifyToken, async (req, res, next) => {
   // const { username } = req.body;
 
   try {
@@ -56,7 +59,7 @@ router.post("/toggle-public/:id", async (req, res, next) => {
   }
 });
 
-router.put("/send-request", async (req, res) => {
+router.put("/send-request",checkIsVerified,verifyToken, async (req, res) => {
   console.log(req.body);
   const { currentUserId, requestedUserId } = req.body;
 
@@ -126,7 +129,7 @@ router.put("/send-request", async (req, res) => {
   }
 });
 
-router.put("/accept-request", async (req, res) => {
+router.put("/accept-request",checkIsVerified,verifyToken, async (req, res) => {
   const { currentUserId, requestedUserId } = req.body;
 
   try {
@@ -179,38 +182,12 @@ router.put("/accept-request", async (req, res) => {
 
 // *******************************************************
 
-router.post("/submit", async (req, res, next) => {
 
-  try {
-    const { userId, link } = req.body;
-    if (link === '') {
-      return res.status(500).json("enter website link")
-    }
-    const team = await Teams.find({ "teamMembers": userId });
-    if (team.length === 0) {
-      return res.status(404).json("team not found");
-    }
-    if (team[0].teamMembers[0]._id !== userId) {
-      return res.status(500).json("only team leader can submit");
-    }
-
-    const updatedTeam = await Teams.findOneAndUpdate(
-      userId,
-      { "websiteLink": link },
-      { new: true }
-    );
-    res.status(200).send(updatedTeam);
-
-  } catch (error) {
-    return res.status(500).json(error);
-  }
-
-})
 
 
 // Listing public users
 
-router.get("/public-users", async (req, res, next) => {
+router.get("/public-users",checkIsVerified,verifyToken, async (req, res, next) => {
   let publicBool = true;
   try {
     let publicUsers;
@@ -226,7 +203,7 @@ router.get("/public-users", async (req, res, next) => {
 });
 
 //recieved requests
-router.get("/requests/:id",async(req,res)=>{
+router.get("/requests/:id",checkIsVerified,verifyToken,async(req,res)=>{
   try{
     const user = await User.findOne({_id:req.params.id}).populate('requestReceivedPending');
     if(!user){
@@ -241,7 +218,7 @@ router.get("/requests/:id",async(req,res)=>{
 })
 
 //sent requests
-router.get("/sent-requests/:id",async(req,res)=>{
+router.get("/sent-requests/:id",checkIsVerified,verifyToken,async(req,res)=>{
   try{
     const user = await User.findOne({_id:req.params.id}).populate('requestSentPending');
     if(!user){
@@ -254,7 +231,7 @@ router.get("/sent-requests/:id",async(req,res)=>{
   }
 })
 
-router.get("/friends/:id",async(req,res)=>{
+router.get("/friends/:id",checkIsVerified,verifyToken,async(req,res)=>{
   try{
     const user = await User.findOne({_id:req.params.id}).populate('friends');
     if(!user){

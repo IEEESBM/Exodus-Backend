@@ -5,21 +5,22 @@ const User = require('../models/UserModel');
 const checkIsVerified = async (req, res, next) => {
 
   try {
-    const token = sessionstorage.getItem('jwt');
-    console.log(token);
+    // const token = sessionstorage.getItem('jwt');
+    let token= req.headers['x-access-token'];
+    // console.log(token);
     var base64Payload = token.split('.')[1];
     var payload = Buffer.from(base64Payload, 'base64');
     var userID = JSON.parse(payload.toString()).id;
     var user = await User.findOne({ _id: userID });
-    console.log(user);
+    // console.log(user);
     if (user.isVerified === true) {
       next();
     }
     else {
-      res.redirect('/login');
+      return res.status(400).json({'err':'Not verified'});
     }
   } catch (error) {
-    res.redirect('/login');
+    return res.status(500).json({'err':error.toString()});
   }
 
 }

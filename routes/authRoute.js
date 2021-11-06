@@ -5,6 +5,7 @@ const sessionstorage = require('sessionstorage');
 const nodemailer = require("nodemailer");
 const bcrypt = require('bcrypt');
 const { checkIsVerified, checkJWT } = require('../middleware/authMiddleware');
+const {verifyToken} = require('../middleware/usercheck');
 
 const router = Router();
 
@@ -54,9 +55,17 @@ const createToken = (id) => {
 
 /* *********************************************************** */
 
-router.get('/', checkIsVerified, checkJWT, async (req, res) => {
-  console.log(req);
-  res.json({'msg':'Home '});
+router.get('/', checkIsVerified,verifyToken, async (req, res) => {
+  try{
+    const user = await User.findOne({_id:req.userId});
+    if(!user){
+      return res.status(404).json({'err':'User not found'});
+    }
+    res.json(user);
+  }
+  catch(err){
+    return res.status(500).json({'err':err.toString()});
+  }
 })
 
 /* *********************************************************** */
@@ -79,6 +88,7 @@ router.post('/signup', async (req, res) => {
       phoneno,
       isVerified: false
     });
+    console.log(user);
     const token = createToken(user._id);
     sessionstorage.setItem('jwt', token);
 

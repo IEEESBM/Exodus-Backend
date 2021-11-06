@@ -1,17 +1,19 @@
 const jwt= require ('jsonwebtoken');
-const userModel= require ('models/UserModel.js');
+const userModel= require ('../models/UserModel.js');
 const sessionstorage = require('sessionstorage');
 
 
 const verifyToken= async (req,res,next)=>{
-    let token= res.headers['x-access-token'];
+    let token= req.headers['x-access-token'];
+    // console.log(token);
 
     if(!token){
-        res.status(403).send({message: "Token not found"});
+        return res.status(403).json({message: "Token not found"});
     }
-    jwt.verify(token,config.secret, (err,decoded)=>{
+    jwt.verify(token,'jwt secret', (err,decoded)=>{
         if(err){
-            res.redirect('/login');
+            // res.redirect('/login');
+            return res.json({'err':'Not authorized'});
         }
         else{
             req.userId= decoded.id;
@@ -40,4 +42,4 @@ const checkuser= async (req,res,next)=>{
     }
 };
 
-module.export={verifyToken, checkuser};
+module.exports={verifyToken, checkuser};
