@@ -97,12 +97,13 @@ router.post('/signup', async (req, res) => {
 
     var transporter = nodemailer.createTransport({
       service: "gmail",
+      secure:true,
       auth: {
         user: process.env.NODE_MAIL_USER,
         pass: process.env.NODE_MAIL_PASS
       }
     });
-    const message = constructTemplate(name,"http://localhost:3000/verification/"+token,email);
+    const message = constructTemplate(name,"https://exodus.ieeemanipal.com/verification/"+token,email);
     const options = {
       from: process.env.NODE_MAIL_USER,
       to: email,
