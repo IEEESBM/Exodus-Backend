@@ -41,12 +41,13 @@ router.post("/user-create", async (req, res, next) => {
 
 
 
-router.post("/toggle-public/:id",checkIsVerified,verifyToken, async (req, res, next) => {
+router.post("/toggle-public/:id",verifyToken, async (req, res, next) => {
   // const { username } = req.body;
 
   try {
     // const user = await User.findOne({ username: username });
-    const user = await User.findOne({_id:req.params.id});
+    const discord = req.body.discordid;
+    const user = await User.findOneAndUpdate({_id:req.params.id},{discordid:discord},{new:true});
     if (user.public === false) {
       await user.updateOne({ public: true });
     }
@@ -59,7 +60,7 @@ router.post("/toggle-public/:id",checkIsVerified,verifyToken, async (req, res, n
   }
 });
 
-router.put("/send-request",checkIsVerified,verifyToken, async (req, res) => {
+router.put("/send-request",verifyToken, async (req, res) => {
   console.log(req.body);
   const { currentUserId, requestedUserId } = req.body;
 
@@ -129,7 +130,7 @@ router.put("/send-request",checkIsVerified,verifyToken, async (req, res) => {
   }
 });
 
-router.put("/accept-request",checkIsVerified,verifyToken, async (req, res) => {
+router.put("/accept-request",verifyToken, async (req, res) => {
   const { currentUserId, requestedUserId } = req.body;
 
   try {
@@ -187,7 +188,7 @@ router.put("/accept-request",checkIsVerified,verifyToken, async (req, res) => {
 
 // Listing public users
 
-router.get("/public-users",checkIsVerified,verifyToken, async (req, res, next) => {
+router.get("/public-users",verifyToken, async (req, res, next) => {
   let publicBool = true;
   try {
     let publicUsers;
@@ -203,7 +204,7 @@ router.get("/public-users",checkIsVerified,verifyToken, async (req, res, next) =
 });
 
 //recieved requests
-router.get("/requests/:id",checkIsVerified,verifyToken,async(req,res)=>{
+router.get("/requests/:id",verifyToken,async(req,res)=>{
   try{
     const user = await User.findOne({_id:req.params.id}).populate('requestReceivedPending');
     if(!user){
@@ -218,7 +219,7 @@ router.get("/requests/:id",checkIsVerified,verifyToken,async(req,res)=>{
 })
 
 //sent requests
-router.get("/sent-requests/:id",checkIsVerified,verifyToken,async(req,res)=>{
+router.get("/sent-requests/:id",verifyToken,async(req,res)=>{
   try{
     const user = await User.findOne({_id:req.params.id}).populate('requestSentPending');
     if(!user){
@@ -231,7 +232,7 @@ router.get("/sent-requests/:id",checkIsVerified,verifyToken,async(req,res)=>{
   }
 })
 
-router.get("/friends/:id",checkIsVerified,verifyToken,async(req,res)=>{
+router.get("/friends/:id",verifyToken,async(req,res)=>{
   try{
     const user = await User.findOne({_id:req.params.id}).populate('friends');
     if(!user){

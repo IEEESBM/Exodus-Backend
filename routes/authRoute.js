@@ -127,6 +127,7 @@ router.post('/signup', async (req, res) => {
 
   catch (error) {
     let errorMessage = handleErrors(error);
+    console.log(errorMessage);
     res.status(400).json({ errorMessage,'err':error.toString() });
   }
 

@@ -8,7 +8,7 @@ const User = require("../models/UserModel");
 const { checkIsVerified, checkJWT } = require('../middleware/authMiddleware');
 const {verifyToken} = require('../middleware/usercheck');
 
-router.get("/",checkIsVerified,verifyToken, async (req, res, next) => {
+router.get("/",verifyToken, async (req, res, next) => {
     
     const userId = req.userId;
     console.log("userId:"+userId);
@@ -30,7 +30,7 @@ router.get("/",checkIsVerified,verifyToken, async (req, res, next) => {
   
   });
 
-router.post("/create",checkIsVerified,verifyToken, async (req, res, next) => {
+router.post("/create",verifyToken, async (req, res, next) => {
 
     const {teamName } = req.body;
     const userId = req.userId;
@@ -72,7 +72,7 @@ router.post("/create",checkIsVerified,verifyToken, async (req, res, next) => {
   
   });
   
-  router.post("/join",checkIsVerified,verifyToken, async (req, res, next) => {
+  router.post("/join",verifyToken, async (req, res, next) => {
   
     const {teamID } = req.body;
     const userId = req.userId;
@@ -99,7 +99,7 @@ router.post("/create",checkIsVerified,verifyToken, async (req, res, next) => {
     }
   });
   
-  router.post("/leave",checkIsVerified,verifyToken, async (req, res, next) => {
+  router.post("/leave",verifyToken, async (req, res, next) => {
     const {teamID } = req.body;
     const userId = req.userId;
   
@@ -126,7 +126,7 @@ router.post("/create",checkIsVerified,verifyToken, async (req, res, next) => {
     }
   });
   
-  router.post("/delete",checkIsVerified,verifyToken, async (req, res, next) => {
+  router.post("/delete",verifyToken, async (req, res, next) => {
     const {teamID } = req.body;
     const userId = req.userId;
   
@@ -148,7 +148,7 @@ router.post("/create",checkIsVerified,verifyToken, async (req, res, next) => {
     }
   });
 
-  router.post("/submit",checkIsVerified,verifyToken, async (req, res, next) => {
+  router.post("/submit",verifyToken, async (req, res, next) => {
 
     try {
       const {websiteLink,details,topic } = req.body;
