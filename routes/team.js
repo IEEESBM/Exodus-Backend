@@ -77,8 +77,9 @@ router.post("/create",checkIsVerified,verifyToken, async (req, res, next) => {
   router.post("/join",checkIsVerified,verifyToken, async (req, res, next) => {
   
     const {teamID } = req.body;
-    console.log(teamID);
+    console.log("team:",teamID);
     const userId = req.userId;
+    console.log(userId);
   
     try {
       const checkDuplicate = await Teams.find({ "teamMembers": userId });
