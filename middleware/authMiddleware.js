@@ -13,7 +13,10 @@ const checkIsVerified = async (req, res, next) => {
     var userID = JSON.parse(payload.toString()).id;
     var user = await User.findOne({ _id: userID });
     // console.log(user);
-    if (user.isVerified === true) {
+    // if (user.isVerified === true) {
+    //   next();
+    // }
+    if(user){
       next();
     }
     else {

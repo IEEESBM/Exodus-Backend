@@ -17,6 +17,7 @@ const verifyToken= async (req,res,next)=>{
         }
         else{
             req.userId= decoded.id;
+            console.log(req.userId);
             next();
         }
     })
