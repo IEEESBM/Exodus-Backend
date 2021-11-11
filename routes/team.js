@@ -7,11 +7,12 @@ const Teams = require("../models/TeamModel");
 const User = require("../models/UserModel");
 const { checkIsVerified, checkJWT } = require('../middleware/authMiddleware');
 const {verifyToken} = require('../middleware/usercheck');
+const { update } = require("../models/TeamModel");
 
 router.get("/",verifyToken, async (req, res, next) => {
     
     const userId = req.userId;
-    console.log("userId:"+userId);
+    // console.log("userId:"+userId);
   
     const team = await Teams.find({ "teamMembers": userId });
   
@@ -19,7 +20,7 @@ router.get("/",verifyToken, async (req, res, next) => {
       return res.status(404).json("team not found");
     }
   
-   console.log(team);
+  //  console.log(team);
     if (team[0].teamMembers[0]._id == userId) {
       res.status(200).json({ teamLeader: true, team });
     }
@@ -83,20 +84,25 @@ router.post("/create",checkIsVerified,verifyToken, async (req, res, next) => {
   
     try {
       const checkDuplicate = await Teams.find({ "teamMembers": userId });
+      console.log("duplicate");
+      console.log(checkDuplicate);
       if (checkDuplicate.length !== 0) {
         return res.status(500).json({ error: 'the user has already joined a team' });
       }
   
-      const team = await Teams.find({ "teamID": teamID });
-      if (team.length === 0) {
+      const team = await Teams.findOne({ "teamID": teamID });
+      console.log("check team");
+      console.log(team);
+      if (!team) {
         return res.status(500).json({ error: 'please enter correct team ID' })
       }
   
       const updatedTeam = await Teams.findOneAndUpdate(
-        teamID,
+        {"teamID":teamID},
         { $push: { teamMembers: userId } },
         { new: true }
       );
+      console.log(updatedTeam);
       res.status(200).send(updatedTeam);
     } catch (error) {
       res.status(500).send(error);
@@ -119,7 +125,7 @@ router.post("/create",checkIsVerified,verifyToken, async (req, res, next) => {
       }
   
       const updatedTeam = await Teams.findOneAndUpdate(
-        teamID,
+        {"teamID":teamID},
         { $pull: { teamMembers: userId } },
         { new: true }
       );
