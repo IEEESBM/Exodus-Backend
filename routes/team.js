@@ -162,7 +162,8 @@ router.post("/create",checkIsVerified,verifyToken, async (req, res, next) => {
   router.post("/submit",checkIsVerified,verifyToken, async (req, res, next) => {
 
     try {
-      const {websiteLink,details,topic } = req.body;
+      
+      const {repoLink,websiteLink,details,topic } = req.body;
       const userId = req.userId;
       // if (link === '') {
       //   return res.status(500).json("enter website link")
@@ -181,7 +182,7 @@ router.post("/create",checkIsVerified,verifyToken, async (req, res, next) => {
   
       const updatedTeam = await Teams.findOneAndUpdate(
         {"teamMembers":userId},
-        { websiteLink,details,topic },
+        { repoLink,websiteLink,details,topic },
         { new: true }
       );
       console.log(updatedTeam);

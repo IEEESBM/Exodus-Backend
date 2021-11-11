@@ -27,7 +27,10 @@ const teamSchema = new Schema({
     lowercase: true,
     validate: [isEmail, 'Please enter a valid Email ID']
   },
-
+  repoLink:{
+    type:String,
+    default:"",
+  },
   websiteLink: {
     type: String,
     required: false,
