@@ -163,6 +163,7 @@ router.get('/login', (req, res) => {
 
 router.post('/login', async (req, res) => {
   const { email, password } = req.body;
+  console.log(email," ",password);
 
   try {
     const user = await User.login(email, password);
@@ -173,6 +174,8 @@ router.post('/login', async (req, res) => {
   }
   catch (error) {
     let errorMessage = handleErrors(error);
+    console.log(error);
+    console.log(errorMessage);
     res.status(400).json({ errorMessage });
   }
 })
