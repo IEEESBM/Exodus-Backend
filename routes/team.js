@@ -171,7 +171,7 @@ router.post("/create",checkIsVerified,verifyToken, async (req, res, next) => {
       const team = await Teams.findOne({ "teamMembers": userId });
       console.log(team);
       if(!team){
-        return res.status(404).json({'msg':'Team not found'});
+        return res.status(404).json({'message':'Team not found. Please create a team'});
       }
       // if (team.length === 0) {
       //   return res.status(404).json("team not found");
@@ -186,7 +186,7 @@ router.post("/create",checkIsVerified,verifyToken, async (req, res, next) => {
         { new: true }
       );
       console.log(updatedTeam);
-      res.status(200).json(updatedTeam);
+      res.status(200).json({"message":"Submitted successfully",updatedTeam});
   
     } catch (error) {
       return res.status(500).json(error);
